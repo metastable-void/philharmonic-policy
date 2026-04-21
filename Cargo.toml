@@ -6,9 +6,23 @@ rust-version = "1.88"
 license = "Apache-2.0 OR MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/metastable-void/philharmonic-policy"
-description = "Policy and tenancy for Philharmonic: Tenant, Principal, TenantEndpointConfig, RoleDefinition, RoleMembership, MintingAuthority, AuditEvent entity kinds with SCK at-rest encryption and permission evaluation."
+description = "Policy and tenancy for Philharmonic: Tenant, Principal, RoleDefinition, RoleMembership, MintingAuthority, AuditEvent entity kinds with permission evaluation."
 
 [dependencies]
+philharmonic-types = "0.3"
+philharmonic-store = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "2"
+
+[dev-dependencies]
+philharmonic-store-sqlx-mysql = "0.1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
+testcontainers = "0.27"
+testcontainers-modules = { version = "0.15", features = ["mysql"] }
+async-trait = "0.1"
+sqlx = { version = "0.8", default-features = false, features = ["mysql", "runtime-tokio"] }
 
 [profile.release]
 opt-level = 3
