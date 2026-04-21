@@ -19,6 +19,23 @@ impl Entity for Tenant {
     const SCALAR_SLOTS: &'static [ScalarSlot] = &[ScalarSlot::new("status", ScalarType::I64, true)];
 }
 
+pub struct TenantEndpointConfig;
+
+impl Entity for TenantEndpointConfig {
+    const KIND: Uuid = uuid!("19d1a8f5-6ef0-49b0-adf5-48e1cd3daea9");
+    const NAME: &'static str = "tenant_endpoint_config";
+    const CONTENT_SLOTS: &'static [ContentSlot] = &[
+        ContentSlot::new("display_name"),
+        ContentSlot::new("encrypted_config"),
+    ];
+    const ENTITY_SLOTS: &'static [EntitySlot] =
+        &[EntitySlot::of::<Tenant>("tenant", SlotPinning::Pinned)];
+    const SCALAR_SLOTS: &'static [ScalarSlot] = &[
+        ScalarSlot::new("key_version", ScalarType::I64, false),
+        ScalarSlot::new("is_retired", ScalarType::Bool, true),
+    ];
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
 pub enum TenantStatus {

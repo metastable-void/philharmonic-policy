@@ -4,7 +4,7 @@ use common::mock::MockStore;
 
 use philharmonic_policy::{
     PermissionDocument, PolicyError, Principal, PrincipalKind, RoleDefinition, RoleMembership,
-    Tenant, TenantStatus, atom, evaluate_permission,
+    Tenant, TenantEndpointConfig, TenantStatus, atom, evaluate_permission,
 };
 
 use philharmonic_store::{ContentStore, EntityRefValue, EntityStoreExt, RevisionInput};
@@ -542,4 +542,58 @@ async fn permission_document_tolerant_parser_via_mock_pipeline() {
         serde_json::from_slice(br#"{"permissions":["audit:read"]}"#).unwrap();
     assert!(array_doc.contains(atom::AUDIT_READ));
     assert!(wrapped_doc.contains(atom::AUDIT_READ));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn tenant_endpoint_config_round_trip_mock() {
+    let store = MockStore::new();
+
+    let tenant_id = fixed_id::<Tenant>(201);
+    let config_id = fixed_id::<TenantEndpointConfig>(202);
+
+    seed_tenant(&store, tenant_id, TenantStatus::Active).await;
+
+    let display_name_hash = put_content(&store, br#"{"display_name":"endpoint-a"}"#).await;
+    let encrypted_config_hash = put_content(&store, b"mock-encrypted-bytes").await;
+
+    store
+        .create_entity_typed::<TenantEndpointConfig>(config_id)
+        .await
+        .unwrap();
+
+    let revision = RevisionInput::new()
+        .with_content("display_name", display_name_hash)
+        .with_content("encrypted_config", encrypted_config_hash)
+        .with_entity(
+            "tenant",
+            EntityRefValue::pinned(tenant_id.internal().as_uuid(), 0),
+        )
+        .with_scalar("key_version", ScalarValue::I64(3))
+        .with_scalar("is_retired", ScalarValue::Bool(false));
+
+    store
+        .append_revision_typed::<TenantEndpointConfig>(config_id, 0, &revision)
+        .await
+        .unwrap();
+
+    let loaded = store
+        .get_latest_revision_typed::<TenantEndpointConfig>(config_id)
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert!(loaded.content_attrs.contains_key("display_name"));
+    assert!(loaded.content_attrs.contains_key("encrypted_config"));
+    assert_eq!(
+        loaded.entity_attrs.get("tenant").unwrap().target_entity_id,
+        tenant_id.internal().as_uuid()
+    );
+    assert_eq!(
+        loaded.scalar_attrs.get("key_version"),
+        Some(&ScalarValue::I64(3))
+    );
+    assert_eq!(
+        loaded.scalar_attrs.get("is_retired"),
+        Some(&ScalarValue::Bool(false))
+    );
 }

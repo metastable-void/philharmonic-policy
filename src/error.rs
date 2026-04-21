@@ -58,4 +58,31 @@ pub enum PolicyError {
 
     #[error("invalid principal kind discriminant: {value}")]
     InvalidPrincipalKindDiscriminant { value: i64 },
+
+    #[error("sck key I/O failed: {0}")]
+    SckIo(#[from] std::io::Error),
+
+    #[error("sck key file length invalid: expected {expected} bytes, got {actual}")]
+    SckKeyFileLength { expected: usize, actual: usize },
+
+    #[error("sck ciphertext too short: got {len} bytes, need at least {required}")]
+    SckCiphertextTooShort { len: usize, required: usize },
+
+    #[error("unsupported sck wire version byte: 0x{byte:02x}")]
+    SckUnsupportedVersion { byte: u8 },
+
+    #[error("sck decryption failed")]
+    SckDecryptFailed,
+
+    #[error("token has wrong length: expected {expected}, got {actual}")]
+    TokenWrongLength { expected: usize, actual: usize },
+
+    #[error("token has wrong prefix")]
+    TokenWrongPrefix,
+
+    #[error("token contains invalid base64")]
+    TokenInvalidBase64,
+
+    #[error("decoded token has wrong byte length: expected {expected}, got {actual}")]
+    TokenDecodedWrongLength { expected: usize, actual: usize },
 }

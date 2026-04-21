@@ -1,6 +1,9 @@
+use hex_literal::hex;
+
 use philharmonic_policy::{
-    AuditEvent, MintingAuthority, Principal, PrincipalKind, RoleDefinition, RoleMembership, Tenant,
-    TenantStatus, atom, evaluate_permission,
+    AuditEvent, MintingAuthority, Principal, PrincipalKind, RoleDefinition, RoleMembership, Sck,
+    Tenant, TenantEndpointConfig, TenantStatus, atom, evaluate_permission, sck_decrypt,
+    sck_encrypt,
 };
 
 use philharmonic_store::{ContentStore, EntityRefValue, EntityStoreExt, RevisionInput, StoreExt};
@@ -577,4 +580,89 @@ async fn permission_evaluation_multi_role_positive_end_to_end() {
         .unwrap();
 
     assert!(allowed);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "requires MySQL testcontainer"]
+async fn tenant_endpoint_config_entity_round_trip() {
+    let ctx = setup().await;
+
+    let tenant_id = seed_tenant(
+        &ctx.store,
+        TenantStatus::Active,
+        br#"{"display_name":"tenant-l"}"#,
+    )
+    .await;
+
+    let config_id = ctx
+        .store
+        .create_entity_minting::<TenantEndpointConfig>()
+        .await
+        .unwrap();
+
+    let key_version = 3_i64;
+    let sck = Sck::from_bytes(hex!(
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    ));
+    let plaintext = br#"{"driver":"mysql","dsn":"tenant-l"}"#;
+    let wire = sck_encrypt(
+        &sck,
+        plaintext,
+        tenant_id.internal().as_uuid(),
+        config_id.internal().as_uuid(),
+        key_version,
+    )
+    .unwrap();
+
+    let display_name = put_content(&ctx.store, br#"{"display_name":"endpoint-l"}"#).await;
+    let encrypted_config = put_content(&ctx.store, &wire).await;
+
+    let revision = RevisionInput::new()
+        .with_content("display_name", display_name)
+        .with_content("encrypted_config", encrypted_config)
+        .with_entity(
+            "tenant",
+            EntityRefValue::pinned(tenant_id.internal().as_uuid(), 0),
+        )
+        .with_scalar("key_version", ScalarValue::I64(key_version))
+        .with_scalar("is_retired", ScalarValue::Bool(false));
+
+    ctx.store
+        .append_revision_typed::<TenantEndpointConfig>(config_id, 0, &revision)
+        .await
+        .unwrap();
+
+    let loaded = ctx
+        .store
+        .get_latest_revision_typed::<TenantEndpointConfig>(config_id)
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert!(loaded.content_attrs.contains_key("display_name"));
+    assert!(loaded.content_attrs.contains_key("encrypted_config"));
+    assert_eq!(
+        loaded.entity_attrs.get("tenant").unwrap().target_entity_id,
+        tenant_id.internal().as_uuid()
+    );
+    assert_eq!(
+        loaded.scalar_attrs.get("key_version"),
+        Some(&ScalarValue::I64(3))
+    );
+    assert_eq!(
+        loaded.scalar_attrs.get("is_retired"),
+        Some(&ScalarValue::Bool(false))
+    );
+
+    let stored_hash = *loaded.content_attrs.get("encrypted_config").unwrap();
+    let stored_wire = ctx.store.get(stored_hash).await.unwrap().unwrap();
+    let decrypted = sck_decrypt(
+        &sck,
+        stored_wire.bytes(),
+        tenant_id.internal().as_uuid(),
+        config_id.internal().as_uuid(),
+        key_version,
+    )
+    .unwrap();
+    assert_eq!(decrypted.as_slice(), plaintext);
 }
