@@ -554,6 +554,36 @@ async fn permission_evaluation_cross_tenant_denial_end_to_end() {
 
 #[tokio::test(flavor = "multi_thread")]
 #[ignore = "requires MySQL testcontainer"]
+async fn permission_evaluation_role_tenant_mismatch_denied_end_to_end() {
+    let ctx = setup().await;
+
+    let tenant_a = seed_tenant(
+        &ctx.store,
+        TenantStatus::Active,
+        br#"{"display_name":"tenant-role-mismatch-a"}"#,
+    )
+    .await;
+    let tenant_b = seed_tenant(
+        &ctx.store,
+        TenantStatus::Active,
+        br#"{"display_name":"tenant-role-mismatch-b"}"#,
+    )
+    .await;
+
+    let principal_id = seed_principal(&ctx.store, tenant_a, PrincipalKind::User, 0, false).await;
+    let foreign_role =
+        seed_role_definition(&ctx.store, tenant_b, br#"["audit:read"]"#, false).await;
+    seed_role_membership(&ctx.store, principal_id, foreign_role, tenant_a, false).await;
+
+    let allowed = evaluate_permission(&ctx.store, principal_id, tenant_a, atom::AUDIT_READ)
+        .await
+        .unwrap();
+
+    assert!(!allowed);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "requires MySQL testcontainer"]
 async fn permission_evaluation_multi_role_positive_end_to_end() {
     let ctx = setup().await;
 

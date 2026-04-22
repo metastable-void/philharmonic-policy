@@ -344,6 +344,91 @@ async fn permission_evaluation_cross_tenant_denied() {
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn permission_evaluation_role_tenant_mismatch_denied() {
+    let store = MockStore::new();
+
+    let tenant_a = fixed_id::<Tenant>(56);
+    let tenant_b = fixed_id::<Tenant>(57);
+    let principal_id = fixed_id::<Principal>(58);
+    let role_id = fixed_id::<RoleDefinition>(59);
+    let membership_id = fixed_id::<RoleMembership>(60);
+
+    seed_tenant(&store, tenant_a, TenantStatus::Active).await;
+    seed_tenant(&store, tenant_b, TenantStatus::Active).await;
+    seed_principal(&store, principal_id, tenant_a, false).await;
+    seed_role_definition(&store, role_id, tenant_b, br#"["audit:read"]"#, false).await;
+    seed_role_membership(
+        &store,
+        membership_id,
+        principal_id,
+        role_id.internal().as_uuid(),
+        tenant_a,
+        false,
+    )
+    .await;
+
+    let allowed = evaluate_permission(&store, principal_id, tenant_a, atom::AUDIT_READ)
+        .await
+        .unwrap();
+
+    assert!(!allowed);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn permission_evaluation_role_tenant_mismatch_skips_to_legit_role() {
+    let store = MockStore::new();
+
+    let tenant_a = fixed_id::<Tenant>(161);
+    let tenant_b = fixed_id::<Tenant>(162);
+    let principal_id = fixed_id::<Principal>(163);
+    let malformed_role = fixed_id::<RoleDefinition>(164);
+    let legit_role = fixed_id::<RoleDefinition>(165);
+    let malformed_membership = fixed_id::<RoleMembership>(166);
+    let legit_membership = fixed_id::<RoleMembership>(167);
+
+    seed_tenant(&store, tenant_a, TenantStatus::Active).await;
+    seed_tenant(&store, tenant_b, TenantStatus::Active).await;
+    seed_principal(&store, principal_id, tenant_a, false).await;
+
+    let missing_hash = Sha256::of(b"role-tenant-mismatch-missing-permissions-blob");
+    seed_role_definition_with_hash(
+        &store,
+        malformed_role,
+        tenant_b,
+        missing_hash,
+        false,
+        br#"{"display_name":"malformed-role"}"#,
+    )
+    .await;
+    seed_role_definition(&store, legit_role, tenant_a, br#"["audit:read"]"#, false).await;
+
+    seed_role_membership(
+        &store,
+        malformed_membership,
+        principal_id,
+        malformed_role.internal().as_uuid(),
+        tenant_a,
+        false,
+    )
+    .await;
+    seed_role_membership(
+        &store,
+        legit_membership,
+        principal_id,
+        legit_role.internal().as_uuid(),
+        tenant_a,
+        false,
+    )
+    .await;
+
+    let allowed = evaluate_permission(&store, principal_id, tenant_a, atom::AUDIT_READ)
+        .await
+        .unwrap();
+
+    assert!(allowed);
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn permission_evaluation_multi_role_positive() {
     let store = MockStore::new();
 

@@ -1,6 +1,6 @@
 use crate::PolicyError;
 use crate::entity::{Principal, RoleDefinition, RoleMembership, Tenant};
-use crate::permission::PermissionDocument;
+use crate::permission::parse_permission_document;
 
 use philharmonic_store::{ContentStore, EntityStoreExt, RevisionRow};
 use philharmonic_types::{Entity, EntityId, ScalarValue, Uuid};
@@ -85,6 +85,11 @@ where
             return Err(PolicyError::RoleNotFound { role_id });
         };
 
+        let role_tenant = entity_attr(&role_revision, RoleDefinition::NAME, "tenant")?;
+        if role_tenant != tenant.internal().as_uuid() {
+            continue;
+        }
+
         if scalar_bool(&role_revision, RoleDefinition::NAME, "is_retired")? {
             continue;
         }
@@ -102,7 +107,7 @@ where
             });
         };
 
-        let doc: PermissionDocument = serde_json::from_slice(permissions_content.bytes())?;
+        let doc = parse_permission_document(permissions_content.bytes())?;
         if doc.contains(required_atom) {
             return Ok(true);
         }

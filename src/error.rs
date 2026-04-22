@@ -9,6 +9,9 @@ pub enum PolicyError {
     #[error("permission document parse failed: {0}")]
     PermissionDocumentParse(#[from] serde_json::Error),
 
+    #[error("unknown permission atom: {atom}")]
+    UnknownPermissionAtom { atom: String },
+
     #[error("principal not found: {principal_id}")]
     PrincipalNotFound { principal_id: Uuid },
 

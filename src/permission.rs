@@ -1,4 +1,7 @@
+use crate::PolicyError;
 use serde::{Deserialize, Serialize};
+
+const UNKNOWN_PERMISSION_ATOM_PREFIX: &str = "unknown permission atom: ";
 
 pub mod atom {
     pub const WORKFLOW_TEMPLATE_CREATE: &str = "workflow:template_create";
@@ -89,8 +92,39 @@ impl<'de> Deserialize<'de> for PermissionDocument {
             PermissionDocumentWire::Bare(values) => values,
             PermissionDocumentWire::Wrapped { permissions } => permissions,
         };
+
+        for atom in &permissions {
+            if !ALL_ATOMS.contains(&atom.as_str()) {
+                return Err(serde::de::Error::custom(format!(
+                    "{UNKNOWN_PERMISSION_ATOM_PREFIX}{atom}"
+                )));
+            }
+        }
+
         Ok(Self { permissions })
     }
+}
+
+pub(crate) fn parse_permission_document(bytes: &[u8]) -> Result<PermissionDocument, PolicyError> {
+    serde_json::from_slice(bytes).map_err(map_permission_document_parse_error)
+}
+
+fn map_permission_document_parse_error(error: serde_json::Error) -> PolicyError {
+    if let Some(atom) = unknown_permission_atom_from_parse_error(&error) {
+        return PolicyError::UnknownPermissionAtom { atom };
+    }
+
+    PolicyError::PermissionDocumentParse(error)
+}
+
+fn unknown_permission_atom_from_parse_error(error: &serde_json::Error) -> Option<String> {
+    let message = error.to_string();
+    let atom_and_location = message.strip_prefix(UNKNOWN_PERMISSION_ATOM_PREFIX)?;
+    let atom = atom_and_location
+        .split(" at line ")
+        .next()
+        .unwrap_or(atom_and_location);
+    Some(atom.to_owned())
 }
 
 #[cfg(test)]
@@ -125,5 +159,38 @@ mod tests {
 
         assert!(doc.contains("audit:read"));
         assert!(!doc.contains("workflow:instance_cancel"));
+    }
+
+    #[test]
+    fn permission_document_rejects_unknown_atom_bare() {
+        let err = serde_json::from_slice::<PermissionDocument>(
+            br#"["workflow:template_read","totally:made_up"]"#,
+        )
+        .unwrap_err();
+
+        assert!(
+            err.to_string()
+                .contains("unknown permission atom: totally:made_up")
+        );
+    }
+
+    #[test]
+    fn permission_document_rejects_unknown_atom_wrapped() {
+        let err = serde_json::from_slice::<PermissionDocument>(
+            br#"{"permissions":["workflow:template_read","totally:made_up"]}"#,
+        )
+        .unwrap_err();
+
+        assert!(
+            err.to_string()
+                .contains("unknown permission atom: totally:made_up")
+        );
+    }
+
+    #[test]
+    fn permission_document_accepts_empty_array() {
+        let doc: PermissionDocument = serde_json::from_slice(br#"[]"#).unwrap();
+
+        assert!(doc.permissions().is_empty());
     }
 }
