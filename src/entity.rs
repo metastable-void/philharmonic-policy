@@ -188,14 +188,13 @@ pub fn validate_subdomain_name(name: &str) -> Result<(), PolicyError> {
 
     let bytes = name.as_bytes();
 
-    let first = bytes[0];
-    if !first.is_ascii_lowercase() {
+    if !bytes.first().is_some_and(u8::is_ascii_lowercase) {
         return Err(PolicyError::InvalidSubdomainName {
             reason: "first character must be a lowercase letter".to_string(),
         });
     }
 
-    if bytes[bytes.len() - 1] == b'-' {
+    if bytes.last() == Some(&b'-') {
         return Err(PolicyError::InvalidSubdomainName {
             reason: "name cannot end with a hyphen".to_string(),
         });
