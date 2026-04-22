@@ -244,7 +244,7 @@ fn pht_generate_from_bytes_matches_vectors() {
         (RAW_2, TOKEN_2, HASH_2),
         (RAW_3, TOKEN_3, HASH_3),
     ] {
-        let (token, hash) = token_internal::generate_api_token_from_bytes(raw);
+        let (token, hash) = token_internal::generate_api_token_from_bytes(&raw);
         assert_eq!(token.as_str(), expected_token);
         assert_eq!(hash.0, expected_hash);
     }

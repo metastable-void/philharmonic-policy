@@ -37,9 +37,9 @@ impl Sck {
             });
         }
 
-        let mut key = [0_u8; SCK_KEY_LEN];
+        let mut key = Zeroizing::new([0_u8; SCK_KEY_LEN]);
         key.copy_from_slice(bytes.as_slice());
-        Ok(Self::from_bytes(key))
+        Ok(Self { key })
     }
 }
 

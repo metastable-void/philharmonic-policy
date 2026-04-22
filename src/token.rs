@@ -5,7 +5,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::TryRng;
 use rand::rngs::SysRng;
 use sha2::{Digest, Sha256};
-use zeroize::{Zeroize, Zeroizing};
+use zeroize::Zeroizing;
 
 pub const TOKEN_PREFIX: &str = "pht_";
 pub const TOKEN_BYTES: usize = 32;
@@ -16,11 +16,9 @@ pub const TOKEN_FULL_LEN: usize = 47;
 pub struct TokenHash(pub [u8; 32]);
 
 pub fn generate_api_token() -> (Zeroizing<String>, TokenHash) {
-    let mut raw = [0_u8; TOKEN_BYTES];
-    fill_random(&mut raw);
-    let generated = generate_api_token_from_bytes(raw);
-    raw.zeroize();
-    generated
+    let mut raw = Zeroizing::new([0_u8; TOKEN_BYTES]);
+    fill_random(raw.as_mut_slice());
+    generate_api_token_from_bytes(&raw)
 }
 
 pub fn parse_api_token(s: &str) -> Result<TokenHash, PolicyError> {
@@ -49,7 +47,7 @@ pub fn parse_api_token(s: &str) -> Result<TokenHash, PolicyError> {
     Ok(TokenHash(hash_token(s)))
 }
 
-pub(crate) fn generate_api_token_from_bytes(raw: [u8; 32]) -> (Zeroizing<String>, TokenHash) {
+pub(crate) fn generate_api_token_from_bytes(raw: &[u8; 32]) -> (Zeroizing<String>, TokenHash) {
     let encoded = URL_SAFE_NO_PAD.encode(raw);
     debug_assert_eq!(encoded.len(), TOKEN_ENCODED_LEN);
 
