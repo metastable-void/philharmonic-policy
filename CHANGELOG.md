@@ -9,11 +9,14 @@ this crate adheres to
 
 ## [Unreleased]
 
+## [0.2.0]
+
 - Added ephemeral API token primitives in `api_token`: COSE_Sign1
   minting and fourteen-step verification, an API signing-key wrapper
   with redacted `Debug`, a verifying-key registry, strict `kid` and
   COSE-header profiles, lifetime and injected-claims size enforcement,
   and `CanonicalJson` injected claims encoded as signed CBOR text.
+  Gate-1 + Gate-2 crypto review passed.
 
 ## [0.1.0]
 
