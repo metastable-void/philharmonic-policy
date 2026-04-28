@@ -1,0 +1,21 @@
+[
+  {"file": "api_token_too_large.hex", "expected_error": "TokenTooLarge"},
+  {"file": "api_unprotected_nonempty.hex", "expected_error": "HeaderProfileViolation"},
+  {"file": "api_protected_unknown_label.hex", "expected_error": "HeaderProfileViolation"},
+  {"file": "api_protected_crit.hex", "expected_error": "HeaderProfileViolation"},
+  {"file": "api_bad_alg.hex", "expected_error": "AlgorithmNotAllowed"},
+  {"file": "api_kid_too_long.hex", "expected_error": "KidProfileViolation"},
+  {"file": "api_kid_invalid_chars.hex", "expected_error": "KidProfileViolation"},
+  {"file": "api_unknown_kid.hex", "expected_error": "UnknownKid"},
+  {"file": "api_key_out_of_window.hex", "expected_error": "KeyOutOfWindow"},
+  {"file": "api_tampered_sig.hex", "expected_error": "BadSignature"},
+  {"file": "api_tampered_payload.hex", "expected_error": "BadSignature"},
+  {"file": "api_claims_not_canonical.hex", "expected_error": "ClaimsNotCanonical"},
+  {"file": "api_issuer_mismatch.hex", "expected_error": "IssuerMismatch"},
+  {"file": "api_kid_inconsistent.hex", "expected_error": "KidInconsistent"},
+  {"file": "api_iat_in_future.hex", "expected_error": "LifetimeInvariantViolation"},
+  {"file": "api_exp_before_iat.hex", "expected_error": "LifetimeInvariantViolation"},
+  {"file": "api_lifetime_too_long.hex", "expected_error": "LifetimeInvariantViolation"},
+  {"file": "api_expired.hex", "expected_error": "Expired"},
+  {"file": "api_claims_too_large.hex", "expected_error": "ClaimsTooLarge"}
+]

@@ -9,6 +9,12 @@ this crate adheres to
 
 ## [Unreleased]
 
+- Added ephemeral API token primitives in `api_token`: COSE_Sign1
+  minting and fourteen-step verification, an API signing-key wrapper
+  with redacted `Debug`, a verifying-key registry, strict `kid` and
+  COSE-header profiles, lifetime and injected-claims size enforcement,
+  and `CanonicalJson` injected claims encoded as signed CBOR text.
+
 ## [0.1.0]
 
 Initial functional release. Implements Phase 2 of the Philharmonic

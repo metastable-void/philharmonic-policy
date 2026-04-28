@@ -1,0 +1,12 @@
+{
+  "iss": "philharmonic-api.example",
+  "iat_millis": 1924991880000,
+  "exp_millis": 1924992000000,
+  "sub": "user-42",
+  "tenant_uuid": "11111111-2222-4333-8444-555555555555",
+  "authority_uuid": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+  "authority_epoch": 7,
+  "permissions": ["workflow:list", "workflow:read"],
+  "claims": {},
+  "kid": "api.test-2026-04-28-deadbeef"
+}
