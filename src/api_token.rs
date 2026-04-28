@@ -77,6 +77,7 @@ impl Serialize for EphemeralApiTokenClaims {
 impl<'de> Deserialize<'de> for EphemeralApiTokenClaims {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
         struct ClaimsHelper {
             iss: String,
             iat: UnixMillis,
@@ -604,9 +605,12 @@ fn verify_internal(
         .payload
         .as_deref()
         .ok_or(ApiTokenVerifyError::Malformed)?;
-    let mut claims_reader = claims_payload;
+    let mut claims_reader: &[u8] = claims_payload;
     let claims: EphemeralApiTokenClaims = ciborium::de::from_reader(&mut claims_reader)
         .map_err(|_| ApiTokenVerifyError::Malformed)?;
+    if !claims_reader.is_empty() {
+        return Err(ApiTokenVerifyError::Malformed);
+    }
 
     let raw_claims = raw_injected_claims_text(claims_payload)?;
     if raw_claims.as_bytes() != claims.claims.as_bytes() {
@@ -679,9 +683,12 @@ fn serialize_claims(claims: &EphemeralApiTokenClaims) -> Result<Vec<u8>, ApiToke
 }
 
 fn raw_injected_claims_text(payload: &[u8]) -> Result<String, ApiTokenVerifyError> {
-    let mut reader = payload;
+    let mut reader: &[u8] = payload;
     let value: ciborium::value::Value =
         ciborium::de::from_reader(&mut reader).map_err(|_| ApiTokenVerifyError::Malformed)?;
+    if !reader.is_empty() {
+        return Err(ApiTokenVerifyError::Malformed);
+    }
     let map = value
         .into_map()
         .map_err(|_| ApiTokenVerifyError::Malformed)?;
