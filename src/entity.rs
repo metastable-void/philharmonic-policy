@@ -29,6 +29,7 @@ impl Entity for TenantEndpointConfig {
     const CONTENT_SLOTS: &'static [ContentSlot] = &[
         ContentSlot::new("display_name"),
         ContentSlot::new("encrypted_config"),
+        ContentSlot::new("implementation"),
     ];
     const ENTITY_SLOTS: &'static [EntitySlot] =
         &[EntitySlot::of::<Tenant>("tenant", SlotPinning::Pinned)];
