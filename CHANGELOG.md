@@ -9,6 +9,11 @@ this crate adheres to
 
 ## [Unreleased]
 
+## [0.2.1]
+
+- Added doc comments across entity types, error variants, permission
+  atoms, SCK functions, and token types.
+
 ## [0.2.0]
 
 - Added ephemeral API token primitives in `api_token`: COSE_Sign1
