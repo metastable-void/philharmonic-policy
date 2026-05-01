@@ -1,3 +1,5 @@
+//! Policy primitives for Philharmonic: entities, permissions, SCK encryption, and API tokens.
+
 mod api_token;
 mod entity;
 mod error;

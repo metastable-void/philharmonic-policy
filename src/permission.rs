@@ -3,38 +3,62 @@ use serde::{Deserialize, Serialize};
 
 const UNKNOWN_PERMISSION_ATOM_PREFIX: &str = "unknown permission atom: ";
 
+/// String constants for every recognised permission atom.
 pub mod atom {
+    /// Create a workflow template.
     pub const WORKFLOW_TEMPLATE_CREATE: &str = "workflow:template_create";
+    /// Read a workflow template.
     pub const WORKFLOW_TEMPLATE_READ: &str = "workflow:template_read";
+    /// Retire a workflow template.
     pub const WORKFLOW_TEMPLATE_RETIRE: &str = "workflow:template_retire";
 
+    /// Create a workflow instance.
     pub const WORKFLOW_INSTANCE_CREATE: &str = "workflow:instance_create";
+    /// Read a workflow instance.
     pub const WORKFLOW_INSTANCE_READ: &str = "workflow:instance_read";
+    /// Execute a step on a workflow instance.
     pub const WORKFLOW_INSTANCE_EXECUTE: &str = "workflow:instance_execute";
+    /// Cancel a workflow instance.
     pub const WORKFLOW_INSTANCE_CANCEL: &str = "workflow:instance_cancel";
 
+    /// Create an endpoint configuration.
     pub const ENDPOINT_CREATE: &str = "endpoint:create";
+    /// Rotate an endpoint configuration key.
     pub const ENDPOINT_ROTATE: &str = "endpoint:rotate";
+    /// Retire an endpoint configuration.
     pub const ENDPOINT_RETIRE: &str = "endpoint:retire";
+    /// Read endpoint metadata (non-decrypted).
     pub const ENDPOINT_READ_METADATA: &str = "endpoint:read_metadata";
+    /// Read decrypted endpoint configuration.
     pub const ENDPOINT_READ_DECRYPTED: &str = "endpoint:read_decrypted";
 
+    /// Manage principals within a tenant.
     pub const TENANT_PRINCIPAL_MANAGE: &str = "tenant:principal_manage";
+    /// Manage roles within a tenant.
     pub const TENANT_ROLE_MANAGE: &str = "tenant:role_manage";
 
+    /// Manage minting authorities within a tenant.
     pub const TENANT_MINTING_MANAGE: &str = "tenant:minting_manage";
+    /// Mint ephemeral API tokens.
     pub const MINT_EPHEMERAL_TOKEN: &str = "mint:ephemeral_token";
 
+    /// Read tenant settings.
     pub const TENANT_SETTINGS_READ: &str = "tenant:settings_read";
+    /// Manage tenant settings.
     pub const TENANT_SETTINGS_MANAGE: &str = "tenant:settings_manage";
 
+    /// Read audit events.
     pub const AUDIT_READ: &str = "audit:read";
 
+    /// Manage tenants at the deployment level.
     pub const DEPLOYMENT_TENANT_MANAGE: &str = "deployment:tenant_manage";
+    /// Manage realms at the deployment level.
     pub const DEPLOYMENT_REALM_MANAGE: &str = "deployment:realm_manage";
+    /// Read audit events at the deployment level.
     pub const DEPLOYMENT_AUDIT_READ: &str = "deployment:audit_read";
 }
 
+/// Complete list of recognised permission atoms.
 pub const ALL_ATOMS: [&str; 22] = [
     atom::WORKFLOW_TEMPLATE_CREATE,
     atom::WORKFLOW_TEMPLATE_READ,
@@ -60,16 +84,19 @@ pub const ALL_ATOMS: [&str; 22] = [
     atom::DEPLOYMENT_AUDIT_READ,
 ];
 
+/// Validated set of permission atoms attached to a role.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct PermissionDocument {
     permissions: Vec<String>,
 }
 
 impl PermissionDocument {
+    /// Check whether this document includes the given permission atom.
     pub fn contains(&self, atom: &str) -> bool {
         self.permissions.iter().any(|value| value == atom)
     }
 
+    /// Return the contained permission atom strings.
     pub fn permissions(&self) -> &[String] {
         &self.permissions
     }

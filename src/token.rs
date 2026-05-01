@@ -7,20 +7,30 @@ use rand::rngs::SysRng;
 use sha2::{Digest, Sha256};
 use zeroize::Zeroizing;
 
+/// Prefix prepended to every API token string.
 pub const TOKEN_PREFIX: &str = "pht_";
+/// Raw random bytes in an API token.
 pub const TOKEN_BYTES: usize = 32;
+/// Length of the base64url-encoded payload (no padding).
 pub const TOKEN_ENCODED_LEN: usize = 43;
+/// Total string length of a complete API token including prefix.
 pub const TOKEN_FULL_LEN: usize = 47;
 
+/// SHA-256 hash of a full API token string, used as credential identifier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct TokenHash(pub [u8; 32]);
+pub struct TokenHash(
+    /// Raw 32-byte SHA-256 digest.
+    pub [u8; 32],
+);
 
+/// Generate a fresh random API token and return its string form and hash.
 pub fn generate_api_token() -> (Zeroizing<String>, TokenHash) {
     let mut raw = Zeroizing::new([0_u8; TOKEN_BYTES]);
     fill_random(raw.as_mut_slice());
     generate_api_token_from_bytes(&raw)
 }
 
+/// Parse and validate an API token string, returning its SHA-256 hash.
 pub fn parse_api_token(s: &str) -> Result<TokenHash, PolicyError> {
     if s.len() != TOKEN_FULL_LEN {
         return Err(PolicyError::TokenWrongLength {

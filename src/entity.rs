@@ -6,6 +6,7 @@ use philharmonic_types::{
 
 use uuid::uuid;
 
+/// Multi-tenant organisation entity.
 pub struct Tenant;
 
 impl Entity for Tenant {
@@ -19,6 +20,7 @@ impl Entity for Tenant {
     const SCALAR_SLOTS: &'static [ScalarSlot] = &[ScalarSlot::new("status", ScalarType::I64, true)];
 }
 
+/// Encrypted endpoint configuration scoped to a tenant.
 pub struct TenantEndpointConfig;
 
 impl Entity for TenantEndpointConfig {
@@ -36,15 +38,20 @@ impl Entity for TenantEndpointConfig {
     ];
 }
 
+/// Lifecycle status of a tenant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
 pub enum TenantStatus {
+    /// Tenant is active and operational.
     Active = 0,
+    /// Tenant is temporarily suspended.
     Suspended = 1,
+    /// Tenant is permanently retired.
     Retired = 2,
 }
 
 impl TenantStatus {
+    /// Return the stable i64 discriminant.
     pub const fn as_i64(self) -> i64 {
         self as i64
     }
@@ -83,14 +90,18 @@ impl Entity for Principal {
     ];
 }
 
+/// Discriminant for principal types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
 pub enum PrincipalKind {
+    /// Human user principal.
     User = 0,
+    /// Non-human service account principal.
     ServiceAccount = 1,
 }
 
 impl PrincipalKind {
+    /// Return the stable i64 discriminant.
     pub const fn as_i64(self) -> i64 {
         self as i64
     }
@@ -108,6 +119,7 @@ impl TryFrom<i64> for PrincipalKind {
     }
 }
 
+/// Tenant-scoped role with a set of permission atoms.
 pub struct RoleDefinition;
 
 impl Entity for RoleDefinition {
@@ -123,6 +135,7 @@ impl Entity for RoleDefinition {
         &[ScalarSlot::new("is_retired", ScalarType::Bool, true)];
 }
 
+/// Association binding a principal to a role within a tenant.
 pub struct RoleMembership;
 
 impl Entity for RoleMembership {
@@ -138,6 +151,7 @@ impl Entity for RoleMembership {
         &[ScalarSlot::new("is_retired", ScalarType::Bool, true)];
 }
 
+/// Authority permitted to mint ephemeral API tokens for a tenant.
 pub struct MintingAuthority;
 
 impl Entity for MintingAuthority {
@@ -157,6 +171,7 @@ impl Entity for MintingAuthority {
     ];
 }
 
+/// Immutable audit-trail event scoped to a tenant.
 pub struct AuditEvent;
 
 impl Entity for AuditEvent {
@@ -171,8 +186,10 @@ impl Entity for AuditEvent {
     ];
 }
 
+/// Subdomain names reserved by the platform and unavailable for tenant use.
 pub const RESERVED_SUBDOMAIN_NAMES: [&str; 5] = ["admin", "api", "www", "app", "connector"];
 
+/// Validate a candidate subdomain name against length, charset, and reservation rules.
 pub fn validate_subdomain_name(name: &str) -> Result<(), PolicyError> {
     if !(2..=63).contains(&name.len()) {
         return Err(PolicyError::InvalidSubdomainName {

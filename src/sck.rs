@@ -17,17 +17,20 @@ const WIRE_VERSION: u8 = 0x01;
 const AAD_LEN: usize = 40;
 const MIN_WIRE_LEN: usize = VERSION_LEN + NONCE_LEN + TAG_LEN;
 
+/// Symmetric content key used for AES-256-GCM envelope encryption.
 pub struct Sck {
     key: Zeroizing<[u8; SCK_KEY_LEN]>,
 }
 
 impl Sck {
+    /// Construct an SCK from a raw 32-byte key.
     pub fn from_bytes(bytes: [u8; SCK_KEY_LEN]) -> Self {
         Self {
             key: Zeroizing::new(bytes),
         }
     }
 
+    /// Load an SCK from a file containing exactly 32 raw key bytes.
     pub fn from_file(path: &Path) -> Result<Self, PolicyError> {
         let bytes = Zeroizing::new(std::fs::read(path)?);
         if bytes.len() != SCK_KEY_LEN {
@@ -43,6 +46,7 @@ impl Sck {
     }
 }
 
+/// Encrypt plaintext with an SCK, binding the ciphertext to the given tenant, config, and key version.
 pub fn sck_encrypt(
     sck: &Sck,
     plaintext: &[u8],
@@ -55,6 +59,7 @@ pub fn sck_encrypt(
     sck_encrypt_with_nonce(sck, plaintext, &nonce, tenant_id, config_uuid, key_version)
 }
 
+/// Decrypt an SCK wire-format ciphertext, verifying the bound tenant, config, and key version.
 pub fn sck_decrypt(
     sck: &Sck,
     wire: &[u8],

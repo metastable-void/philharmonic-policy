@@ -5,6 +5,7 @@ use crate::permission::parse_permission_document;
 use philharmonic_store::{ContentStore, EntityStoreExt, RevisionRow};
 use philharmonic_types::{Entity, EntityId, ScalarValue, Uuid};
 
+/// Check whether a principal holds the required permission atom within a tenant.
 pub async fn evaluate_permission<S>(
     store: &S,
     principal: EntityId<Principal>,
