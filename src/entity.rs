@@ -39,6 +39,27 @@ impl Entity for TenantEndpointConfig {
     ];
 }
 
+/// Tenant-managed corpus for vector-search driven workflows.
+pub struct EmbeddingDataset;
+
+impl Entity for EmbeddingDataset {
+    const KIND: Uuid = uuid!("37aaccf5-a760-457d-879f-a48f6617ef33");
+    const NAME: &'static str = "embedding_dataset";
+    const CONTENT_SLOTS: &'static [ContentSlot] = &[
+        ContentSlot::new("display_name"),
+        ContentSlot::new("source_items"),
+        ContentSlot::new("corpus"),
+        ContentSlot::new("embed_endpoint_id"),
+    ];
+    const ENTITY_SLOTS: &'static [EntitySlot] =
+        &[EntitySlot::of::<Tenant>("tenant", SlotPinning::Pinned)];
+    const SCALAR_SLOTS: &'static [ScalarSlot] = &[
+        ScalarSlot::new("status", ScalarType::I64, true),
+        ScalarSlot::new("is_retired", ScalarType::Bool, true),
+        ScalarSlot::new("item_count", ScalarType::I64, false),
+    ];
+}
+
 /// Lifecycle status of a tenant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
@@ -67,6 +88,41 @@ impl TryFrom<i64> for TenantStatus {
             1 => Ok(Self::Suspended),
             2 => Ok(Self::Retired),
             _ => Err(PolicyError::InvalidTenantStatusDiscriminant { value }),
+        }
+    }
+}
+
+/// Lifecycle status of an embedding dataset.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(i64)]
+pub enum EmbeddingDatasetStatus {
+    /// Dataset is created and waiting for embedding.
+    Created = 0,
+    /// Dataset embedding is in progress.
+    Embedding = 1,
+    /// Dataset corpus is available.
+    Ready = 2,
+    /// Dataset embedding failed.
+    Failed = 3,
+}
+
+impl EmbeddingDatasetStatus {
+    /// Return the stable i64 discriminant.
+    pub const fn as_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl TryFrom<i64> for EmbeddingDatasetStatus {
+    type Error = PolicyError;
+
+    fn try_from(value: i64) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Created),
+            1 => Ok(Self::Embedding),
+            2 => Ok(Self::Ready),
+            3 => Ok(Self::Failed),
+            _ => Err(PolicyError::InvalidEmbeddingDatasetStatusDiscriminant { value }),
         }
     }
 }
@@ -241,7 +297,11 @@ pub fn validate_subdomain_name(name: &str) -> Result<(), PolicyError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{PrincipalKind, TenantStatus, validate_subdomain_name};
+    use super::{
+        EmbeddingDataset, EmbeddingDatasetStatus, PrincipalKind, TenantStatus,
+        validate_subdomain_name,
+    };
+    use philharmonic_types::Entity;
 
     #[test]
     fn validate_subdomain_name_accepts_valid_names() {
@@ -283,6 +343,36 @@ mod tests {
         }
 
         assert!(TenantStatus::try_from(99).is_err());
+    }
+
+    #[test]
+    fn embedding_dataset_schema_matches_design() {
+        assert_eq!(EmbeddingDataset::KIND.get_version_num(), 4);
+        assert_eq!(EmbeddingDataset::NAME, "embedding_dataset");
+        assert_eq!(
+            (
+                EmbeddingDataset::CONTENT_SLOTS.len(),
+                EmbeddingDataset::ENTITY_SLOTS.len(),
+                EmbeddingDataset::SCALAR_SLOTS.len()
+            ),
+            (4, 1, 3)
+        );
+    }
+
+    #[test]
+    fn embedding_dataset_status_discriminant_round_trip() {
+        for (raw, expected) in [
+            (0_i64, EmbeddingDatasetStatus::Created),
+            (1_i64, EmbeddingDatasetStatus::Embedding),
+            (2_i64, EmbeddingDatasetStatus::Ready),
+            (3_i64, EmbeddingDatasetStatus::Failed),
+        ] {
+            let parsed = EmbeddingDatasetStatus::try_from(raw).unwrap();
+            assert_eq!(parsed, expected);
+            assert_eq!(parsed.as_i64(), raw);
+        }
+
+        assert!(EmbeddingDatasetStatus::try_from(99).is_err());
     }
 
     #[test]

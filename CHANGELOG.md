@@ -9,6 +9,16 @@ this crate adheres to
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-10
+
+- Added the `EmbeddingDataset` entity and
+  `EmbeddingDatasetStatus` enum.
+- Added four `embed_dataset:*` permission atoms.
+- Added a deterministic-CBOR codec for source-items and corpus
+  blobs.
+- Added the `InvalidEmbeddingDatasetStatusDiscriminant` error
+  variant.
+
 ## [0.2.1]
 
 - Added doc comments across entity types, error variants, permission

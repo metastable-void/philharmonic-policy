@@ -107,6 +107,13 @@ pub enum PolicyError {
         value: i64,
     },
 
+    /// Embedding dataset status i64 discriminant is unknown.
+    #[error("invalid embedding dataset status discriminant: {value}")]
+    InvalidEmbeddingDatasetStatusDiscriminant {
+        /// Unrecognised discriminant value.
+        value: i64,
+    },
+
     /// Principal kind i64 discriminant is unknown.
     #[error("invalid principal kind discriminant: {value}")]
     InvalidPrincipalKindDiscriminant {

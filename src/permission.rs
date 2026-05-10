@@ -32,6 +32,15 @@ pub mod atom {
     /// Read decrypted endpoint configuration.
     pub const ENDPOINT_READ_DECRYPTED: &str = "endpoint:read_decrypted";
 
+    /// Create embedding datasets.
+    pub const EMBED_DATASET_CREATE: &str = "embed_dataset:create";
+    /// Read embedding datasets.
+    pub const EMBED_DATASET_READ: &str = "embed_dataset:read";
+    /// Update embedding datasets.
+    pub const EMBED_DATASET_UPDATE: &str = "embed_dataset:update";
+    /// Retire embedding datasets.
+    pub const EMBED_DATASET_RETIRE: &str = "embed_dataset:retire";
+
     /// Manage principals within a tenant.
     pub const TENANT_PRINCIPAL_MANAGE: &str = "tenant:principal_manage";
     /// Manage roles within a tenant.
@@ -59,7 +68,7 @@ pub mod atom {
 }
 
 /// Complete list of recognised permission atoms.
-pub const ALL_ATOMS: [&str; 22] = [
+pub const ALL_ATOMS: [&str; 26] = [
     atom::WORKFLOW_TEMPLATE_CREATE,
     atom::WORKFLOW_TEMPLATE_READ,
     atom::WORKFLOW_TEMPLATE_RETIRE,
@@ -72,6 +81,10 @@ pub const ALL_ATOMS: [&str; 22] = [
     atom::ENDPOINT_RETIRE,
     atom::ENDPOINT_READ_METADATA,
     atom::ENDPOINT_READ_DECRYPTED,
+    atom::EMBED_DATASET_CREATE,
+    atom::EMBED_DATASET_READ,
+    atom::EMBED_DATASET_UPDATE,
+    atom::EMBED_DATASET_RETIRE,
     atom::TENANT_PRINCIPAL_MANAGE,
     atom::TENANT_ROLE_MANAGE,
     atom::TENANT_MINTING_MANAGE,
@@ -156,7 +169,7 @@ fn unknown_permission_atom_from_parse_error(error: &serde_json::Error) -> Option
 
 #[cfg(test)]
 mod tests {
-    use super::PermissionDocument;
+    use super::{PermissionDocument, atom};
 
     #[test]
     fn permission_document_parses_bare_array() {
@@ -219,5 +232,28 @@ mod tests {
         let doc: PermissionDocument = serde_json::from_slice(br#"[]"#).unwrap();
 
         assert!(doc.permissions().is_empty());
+    }
+
+    #[test]
+    fn permission_document_accepts_embed_dataset_atoms() {
+        let doc: PermissionDocument = serde_json::from_slice(
+            br#"[
+                "embed_dataset:create",
+                "embed_dataset:read",
+                "embed_dataset:update",
+                "embed_dataset:retire"
+            ]"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            doc.permissions(),
+            [
+                atom::EMBED_DATASET_CREATE,
+                atom::EMBED_DATASET_READ,
+                atom::EMBED_DATASET_UPDATE,
+                atom::EMBED_DATASET_RETIRE
+            ]
+        );
     }
 }

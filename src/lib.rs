@@ -1,6 +1,7 @@
 //! Policy primitives for Philharmonic: entities, permissions, SCK encryption, and API tokens.
 
 mod api_token;
+mod embed_dataset_codec;
 mod entity;
 mod error;
 mod evaluation;
@@ -15,10 +16,14 @@ pub use api_token::{
     MAX_TOKEN_LIFETIME_MILLIS, RegistryInsertError, VerifyLimits, VerifyingKey,
     mint_ephemeral_api_token, verify_ephemeral_api_token, verify_ephemeral_api_token_with_limits,
 };
+pub use embed_dataset_codec::{
+    CorpusItem, EmbedDatasetCodecError, SourceItem, decode_corpus, decode_source_items,
+    encode_corpus, encode_source_items,
+};
 pub use entity::{
-    AuditEvent, MintingAuthority, Principal, PrincipalKind, RESERVED_SUBDOMAIN_NAMES,
-    RoleDefinition, RoleMembership, Tenant, TenantEndpointConfig, TenantStatus,
-    validate_subdomain_name,
+    AuditEvent, EmbeddingDataset, EmbeddingDatasetStatus, MintingAuthority, Principal,
+    PrincipalKind, RESERVED_SUBDOMAIN_NAMES, RoleDefinition, RoleMembership, Tenant,
+    TenantEndpointConfig, TenantStatus, validate_subdomain_name,
 };
 pub use error::PolicyError;
 pub use evaluation::evaluate_permission;
