@@ -9,6 +9,22 @@ this crate adheres to
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-11
+
+Added the `audit_event_type` public module — canonical `i64`
+discriminants for the `AuditEvent` entity's `event_type`
+scalar slot. Replaces the previous "deployment-defined"
+free-for-all with one stable value per documented audit-
+event category in `docs/design/09-policy-and-tenancy.md`
+§Audit trail. Numbering is append-only with per-category
+gaps (1-9 principals, 10-19 roles/memberships, 20-29
+endpoints, 30-39 authorities, 40-49 token mint, 50-59
+tenant lifecycle). A `name(i64) -> Option<&'static str>`
+helper maps known discriminants to canonical snake_case
+labels for logging; unknown values return `None` to keep
+read-side consumers forward-compatible. Additive new
+module; existing public API unchanged.
+
 ## [0.2.2] - 2026-05-10
 
 - Added the `EmbeddingDataset` entity and

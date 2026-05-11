@@ -1,6 +1,7 @@
 //! Policy primitives for Philharmonic: entities, permissions, SCK encryption, and API tokens.
 
 mod api_token;
+pub mod audit_event_type;
 mod embed_dataset_codec;
 mod entity;
 mod error;
