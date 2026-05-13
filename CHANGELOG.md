@@ -9,6 +9,12 @@ this crate adheres to
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-05-13
+
+- Dev: migrate integration-test fixtures from `testcontainers` /
+  `testcontainers-modules` to `dockerlet 0.1`. No public-API
+  change; runtime behaviour unchanged.
+
 ## [0.2.3] - 2026-05-11
 
 Added the `audit_event_type` public module — canonical `i64`
