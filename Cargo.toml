@@ -1,6 +1,6 @@
 [package]
 name = "philharmonic-policy"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0 OR MPL-2.0"
@@ -11,27 +11,27 @@ description = "Policy and tenancy for Philharmonic: Tenant, Principal, RoleDefin
 [dependencies]
 philharmonic-types = "0.3"
 philharmonic-store = "0.1"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-uuid = { version = "1", features = ["v4", "serde"] }
-thiserror = "2"
-aes-gcm = "0.10"
-coset = "0.4"
-ciborium = "0.2"
-ed25519-dalek = "2"
-sha2 = "0.11"
-base64 = "0.22"
-rand = "0.10"
-zeroize = { version = "1", features = ["derive"] }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+uuid = { version = "1", default-features = false, features = [] }
+thiserror = { version = "2", default-features = false, features = ["std"] }
+aes-gcm = { version = "0.10", default-features = false, features = ["aes", "alloc"] }
+coset = { version = "0.4", default-features = false, features = [] }
+ciborium = { version = "0.2", default-features = false, features = ["std"] }
+ed25519-dalek = { version = "2", default-features = false, features = ["fast", "std", "zeroize"] }
+sha2 = { version = "0.11", default-features = false, features = ["alloc"] }
+base64 = { version = "0.22", default-features = false, features = ["alloc"] }
+rand = { version = "0.10", default-features = false, features = ["std", "sys_rng"] }
+zeroize = { version = "1", default-features = false, features = ["alloc", "derive"] }
 
 [dev-dependencies]
 dockerlet = "0.1"
 philharmonic-store-sqlx-mysql = "0.1"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
-async-trait = "0.1"
+tokio = { version = "1", default-features = false, features = ["macros", "rt-multi-thread", "sync", "time"] }
+async-trait = { version = "0.1", default-features = false, features = [] }
 sqlx = { version = "0.8", default-features = false, features = ["mysql", "runtime-tokio"] }
-hex-literal = "0.4"
-proptest = "1"
+hex-literal = { version = "0.4", default-features = false, features = [] }
+proptest = { version = "1", default-features = false, features = ["std"] }
 
 [profile.release]
 opt-level = 3
